@@ -29,3 +29,22 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+## Database Migrations
+
+```bash
+# Generate a new migration (auto-detect entity changes)
+$ npm run migration:generate --name=Init
+
+# Create an empty migration file (for custom SQL)
+$ npm run migration:create --name=CreateUsersTable
+
+# Run all pending migrations
+$ npm run migration:run
+
+# Revert the last migration
+$ npm run migration:revert
+
+# Show all migrations and their execution status (executed vs pending)
+$ npm run migration:show
+```

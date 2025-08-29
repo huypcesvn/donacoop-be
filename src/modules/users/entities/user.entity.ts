@@ -9,8 +9,8 @@ export class User {
   @Column({ name: 'full_name', length: 100, nullable: false })
   fullName: string;
 
-  @Column({ length: 120, unique: true, nullable: true })
-  email: string;
+  @Column({ length: 16, unique: true, nullable: true })
+  username: string;
 
   @Column({ length: 110, nullable: true })
   password: string;

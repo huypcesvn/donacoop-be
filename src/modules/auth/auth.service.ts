@@ -16,7 +16,10 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, plainPassword: string): Promise<any> {
-    const user = await this.userRepository.findOne({ where: { username } });
+    const user = await this.userRepository.findOne({
+      where: { username },
+      relations: ['roles']
+    });
     if (!user) return null;
 
     const isValidPassword = await verify(user.password, plainPassword);
@@ -26,9 +29,39 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const payload = { sub: user.id, username: user.username };
-    const userInfo = { id: user.id, username: user.username, name: user.fullName };
+    const roles = user.roles?.map(role => role.name) || [];
+    console.log('User roles:', roles); // Debug log
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      roles: roles
+    };
+    const userInfo = {
+      id: user.id,
+      username: user.username,
+      name: user.fullName,
+      roles: roles
+    };
     return { userInfo, access_token: this.jwtService.sign(payload) };
+  }
+
+  async getProfile(user: any) {
+    const fullUser = await this.userRepository.findOne({
+      where: { id: user.id },
+      relations: ['roles']
+    });
+
+    if (!fullUser) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const roles = fullUser.roles?.map(role => role.name) || [];
+    return {
+      id: fullUser.id,
+      username: fullUser.username,
+      name: fullUser.fullName,
+      roles: roles
+    };
   }
 
   async register(registerDto: RegisterDto) {

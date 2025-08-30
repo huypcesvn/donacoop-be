@@ -48,3 +48,7 @@ $ npm run migration:revert
 # Show all migrations and their execution status (executed vs pending)
 $ npm run migration:show
 ```
+
+```bash
+$ npm run seed
+```

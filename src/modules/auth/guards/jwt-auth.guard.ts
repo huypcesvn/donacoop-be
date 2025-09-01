@@ -1,4 +1,4 @@
-import { IS_PUBLIC_KEY } from 'src/decorators/skip-auth';
+import { IS_PUBLIC_KEY } from 'src/common/decorators/skip-auth';
 import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';

@@ -1,6 +1,6 @@
 import { Controller, Request, Post, UseGuards, Body, Res, Get } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './passport/local-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SkipAuth } from 'src/decorators/skip-auth';
 import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';

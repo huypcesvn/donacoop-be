@@ -7,7 +7,7 @@ import ormConfig from './db/data-source';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './modules/auth/passport/jwt-auth.guard';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [

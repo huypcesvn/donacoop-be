@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from './role.entity';
+import { Company } from '../../companies/company.entity';
 
 @Entity('users')
 export class User {
@@ -15,6 +16,24 @@ export class User {
   @Column({ length: 110, nullable: true })
   password: string;
 
+  @Column({ length: 100, nullable: true })
+  position: string; // Chức vụ, e.g., Quản lí, tài xế (though role might cover, but sheet has it separately)
+
+  @Column({ name: 'current_job', length: 100, nullable: true })
+  currentJob: string; // Công việc hiện tại
+
+  @Column({ name: 'personal_email', length: 100, nullable: true })
+  personalEmail: string;
+
+  @Column({ name: 'personal_phone', length: 50, nullable: true })
+  personalPhone: string;
+
+  @Column({ length: 200, nullable: true })
+  address: string;
+
+  @Column({ length: 100, nullable: true })
+  city: string;
+
   @ManyToMany(() => Role, (role) => role.users, { eager: true })
   @JoinTable({
     name: 'user_roles',
@@ -22,6 +41,10 @@ export class User {
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
   roles: Role[];
+
+  @ManyToOne(() => Company, (company) => company.users, { nullable: true })
+  @JoinColumn({ name: 'company_id' })
+  company: Company;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

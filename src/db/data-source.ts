@@ -1,24 +1,19 @@
-import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
-import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
-const configService = new ConfigService();
-
-const ormConfig: PostgresConnectionOptions = {
-  type: 'postgres',
-  host: configService.get<string>('DB_HOST', 'localhost'),
-  port: configService.get<number>('DB_PORT', 5432),
-  username: configService.get<string>('DB_USERNAME', 'postgres'),
-  password: configService.get<string>('DB_PASSWORD', ''),
-  database: configService.get<string>('DB_NAME', 'donacoop_development'),
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/migrations/*{.ts,.js}'],
+const ormConfig: DataSourceOptions = {
+  type: process.env.DB_TYPE as any || 'postgres',
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 5432),
+  username: process.env.DB_USERNAME || 'postgres',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'donacoop_development',
+  entities: [__dirname + '/../**/*.entity.{ts,js}'],
+  migrations: [__dirname + '/migrations/*.{ts,js}'],
   synchronize: false,
   logging: true,
-}
+};
 
 const AppDataSource = new DataSource(ormConfig);
 
 export { AppDataSource };
-
 export default ormConfig;

@@ -28,4 +28,13 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  // Check permission
+  // const user = await userRepository.findOne();
+  // user.can('post', 'delete')
+  can(resource: string, action: string): boolean {
+    return this.roles.some(role =>
+      role.permissions.some(p => p.resource === resource && p.action === action)
+    );
+  }
 }

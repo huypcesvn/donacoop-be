@@ -6,8 +6,11 @@ export class Permission {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 100, unique: true, nullable: false })
-  name: string; // view_users, edit_users, delete_post, ...
+  @Column({ length: 50, nullable: false })
+  resource: string; // user, post, project
+
+  @Column({ length: 50, nullable: false })
+  action: string;   // view, edit, delete, create
 
   @ManyToMany(() => Role, (role) => role.permissions)
   roles: Role[];

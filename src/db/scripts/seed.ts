@@ -1,25 +1,9 @@
 import 'reflect-metadata';
-import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
 import * as argon2 from 'argon2';
-
 import { User } from '../../modules/users/entities/user.entity';
 import { Role } from '../../modules/users/entities/role.entity';
 import { Permission } from '../../modules/users/entities/permission.entity';
-
-dotenv.config();
-
-const AppDataSource = new DataSource({
-  type: 'postgres',
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  entities: [User, Role, Permission],
-  synchronize: false,
-  logging: true,
-});
+import { AppDataSource } from '../data-source';
 
 async function seed() {
   await AppDataSource.initialize();
@@ -28,75 +12,53 @@ async function seed() {
   const roleRepo = AppDataSource.getRepository(Role);
   const permRepo = AppDataSource.getRepository(Permission);
 
-  // 1. Seed permissions
-  const permissions = [
-    'create_user',
-    'add_company',
-    'add_employee',
-    'add_truck',
-    'add_machine',
-    'warehouse_view',
-    'warehouse_edit',
-    'dispatch_machine_view',
-    'dispatch_machine_edit',
-    'truck_registration_view',
-    'truck_registration_edit',
-    'activity_tracking_view',
-    'activity_tracking_edit',
+  // 1️⃣ Seed permissions (resource + action)
+  const permissionsData = [
+    { resource: 'user', action: 'create' },
+    { resource: 'company', action: 'add' },
+    { resource: 'employee', action: 'add' },
+    { resource: 'truck', action: 'add' },
+    { resource: 'machine', action: 'add' },
+    { resource: 'warehouse', action: 'view' },
+    { resource: 'warehouse', action: 'edit' },
+    { resource: 'dispatch_machine', action: 'view' },
+    { resource: 'dispatch_machine', action: 'edit' },
+    { resource: 'truck_registration', action: 'view' },
+    { resource: 'truck_registration', action: 'edit' },
+    { resource: 'activity_tracking', action: 'view' },
+    { resource: 'activity_tracking', action: 'edit' },
   ];
 
   const permEntities: Permission[] = [];
-  for (const p of permissions) {
-    let perm = await permRepo.findOne({ where: { name: p } });
+  for (const p of permissionsData) {
+    let perm = await permRepo.findOne({ where: { resource: p.resource, action: p.action } });
     if (!perm) {
-      perm = permRepo.create({ name: p });
+      perm = permRepo.create({ resource: p.resource, action: p.action });
       perm = await permRepo.save(perm);
     }
     permEntities.push(perm);
   }
 
-  // 2. Seed roles
-  const roleNames = [
-    'Admin',
-    'Manager',
-    'Accountant',
-    'Mine Director',
-    'Mine Manager',
-    'Driver',
-  ];
-
+  // 2️⃣ Seed roles
+  const roleNames = ['Admin', 'Manager', 'Accountant', 'Mine Director', 'Mine Manager', 'Driver'];
   for (const r of roleNames) {
-    let role = await roleRepo.findOne({
-      where: { name: r },
-      relations: ['permissions'],
-    });
-
-    if (!role) {
-      role = roleRepo.create({ name: r });
-    }
+    let role = await roleRepo.findOne({ where: { name: r }, relations: ['permissions'] });
+    if (!role) role = roleRepo.create({ name: r });
 
     // Admin full quyền
-    if (r === 'Admin') {
-      role.permissions = permEntities;
-    }
+    if (r === 'Admin') role.permissions = permEntities;
 
     await roleRepo.save(role);
   }
 
-  // 3. Seed admin user
+  // 3️⃣ Seed admin user
   const adminUsername = '0935033682';
-  let admin = await userRepo.findOne({
-    where: { username: adminUsername },
-    relations: ['roles'],
-  });
+  let admin = await userRepo.findOne({ where: { username: adminUsername }, relations: ['roles'] });
 
   if (!admin) {
-    const adminRole = await roleRepo.findOne({
-      where: { name: 'Admin' },
-      relations: ['permissions'],
-    });
-
+    const adminRole = await roleRepo.findOne({ where: { name: 'Admin' }, relations: ['permissions'] });
     const passwordHash = await argon2.hash('123456');
+
     admin = userRepo.create({
       fullName: 'System Administrator',
       username: adminUsername,

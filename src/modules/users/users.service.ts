@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 
 @Injectable()
@@ -20,5 +20,12 @@ export class UsersService {
     await this.userRepository.save(newUser);
 
     return { id: newUser.id, username, fullName };
+  }
+
+  findById(id: number, options?: FindOneOptions<User>) {
+    return this.userRepository.findOne({
+      where: { id },
+      ...options,
+    });
   }
 }

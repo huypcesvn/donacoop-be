@@ -4,6 +4,9 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { SkipAuth } from 'src/decorators/skip-auth';
 import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PermissionsGuard } from 'src/common/guards/permissions.guard';
+import { Permissions } from 'src/common/decorators/permissions.decorator';
 
 @Controller({ path: 'auth', version: '1' }) // /api/v1/auth
 export class AuthController {
@@ -27,9 +30,11 @@ export class AuthController {
     return { userInfo, access_token };
   }
 
-  @SkipAuth()
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @Permissions('user', 'create')
+  async register(@Body() registerDto: RegisterDto, @Request() req) {
+    console.log(`------ user(${req.user.username}, ${req.user.fullName}) permissions:`, req.user.roles[0]?.permissions.map(perm => `${perm.resource}.${perm.action}`))
     return this.authService.register(registerDto);
   }
 

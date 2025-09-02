@@ -1,9 +1,12 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from './role.entity';
 import { Company } from '../../companies/company.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
+  static readonly DEFAULT_PASSWORD = '123456';
+
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -13,6 +16,7 @@ export class User {
   @Column({ length: 16, unique: true, nullable: true })
   username: string;
 
+  @Exclude()  // Exclude this field from any serialized response (never sent to the client)
   @Column({ length: 110, nullable: true })
   password: string;
 
@@ -34,7 +38,7 @@ export class User {
   @Column({ length: 100, nullable: true })
   city: string;
 
-  @ManyToMany(() => Role, (role) => role.users, { eager: true })
+  @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
@@ -56,8 +60,8 @@ export class User {
   // const user = await userRepository.findOne();
   // user.can('post', 'delete')
   can(resource: string, action: string): boolean {
-    return this.roles.some(role =>
-      role.permissions.some(p => p.resource === resource && p.action === action)
+    return this.roles.some(role => 
+      role.key === 'admin' || role.permissions.some(p => p.resource === resource && p.action === action)
     );
   }
 }

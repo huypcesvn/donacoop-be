@@ -4,6 +4,7 @@ import { User } from '../../modules/users/entities/user.entity';
 import { Role } from '../../modules/users/entities/role.entity';
 import { Permission } from '../../modules/users/entities/permission.entity';
 import { AppDataSource } from '../data-source';
+import { PERMISSIONS } from 'src/common/constants/permissions.constant';
 
 async function seed() {
   await AppDataSource.initialize();
@@ -12,43 +13,36 @@ async function seed() {
   const roleRepo = AppDataSource.getRepository(Role);
   const permRepo = AppDataSource.getRepository(Permission);
 
-  // 1️⃣ Seed permissions (resource + action)
-  const permissionsData = [
-    { resource: 'user', action: 'create' },
-    { resource: 'company', action: 'add' },
-    { resource: 'employee', action: 'add' },
-    { resource: 'truck', action: 'add' },
-    { resource: 'machine', action: 'add' },
-    { resource: 'warehouse', action: 'view' },
-    { resource: 'warehouse', action: 'edit' },
-    { resource: 'dispatch_machine', action: 'view' },
-    { resource: 'dispatch_machine', action: 'edit' },
-    { resource: 'truck_registration', action: 'view' },
-    { resource: 'truck_registration', action: 'edit' },
-    { resource: 'activity_tracking', action: 'view' },
-    { resource: 'activity_tracking', action: 'edit' },
-  ];
+  // 1️⃣ Seed permissions theo PERMISSIONS constant
+  for (const resourceKey of Object.keys(PERMISSIONS)) {
+    const actions = PERMISSIONS[resourceKey as keyof typeof PERMISSIONS];
+    for (const actionKey of Object.keys(actions)) {
+      const { resource, action } = actions[actionKey as keyof typeof actions];
 
-  const permEntities: Permission[] = [];
-  for (const p of permissionsData) {
-    let perm = await permRepo.findOne({ where: { resource: p.resource, action: p.action } });
-    if (!perm) {
-      perm = permRepo.create({ resource: p.resource, action: p.action });
-      perm = await permRepo.save(perm);
+      const exists = await permRepo.findOne({ where: { resource, action } });
+      if (!exists) {
+        const perm = permRepo.create({ resource, action });
+        await permRepo.save(perm);
+      }
     }
-    permEntities.push(perm);
   }
 
   // 2️⃣ Seed roles
-  const roleNames = ['Admin', 'Manager', 'Accountant', 'Mine Director', 'Mine Manager', 'Driver'];
-  for (const r of roleNames) {
-    let role = await roleRepo.findOne({ where: { name: r }, relations: ['permissions'] });
-    if (!role) role = roleRepo.create({ name: r });
+  const roleDefs = [
+    { name: 'Admin', key: 'admin' },
+    { name: 'Manager', key: 'manager' },
+    { name: 'Accountant', key: 'accountant' },
+    { name: 'Mine Director', key: 'mine_director' },
+    { name: 'Mine Manager', key: 'mine_manager' },
+    { name: 'Driver', key: 'driver' },
+  ];
 
-    // Admin full quyền
-    if (r === 'Admin') role.permissions = permEntities;
-
-    await roleRepo.save(role);
+  for (const r of roleDefs) {
+    let role = await roleRepo.findOne({ where: { key: r.key } });
+    if (!role) {
+      role = roleRepo.create({ name: r.name, key: r.key });
+      await roleRepo.save(role);
+    }
   }
 
   // 3️⃣ Seed admin user
@@ -56,13 +50,17 @@ async function seed() {
   let admin = await userRepo.findOne({ where: { username: adminUsername }, relations: ['roles'] });
 
   if (!admin) {
-    const adminRole = await roleRepo.findOne({ where: { name: 'Admin' }, relations: ['permissions'] });
+    const adminRole = await roleRepo.findOne({ where: { key: 'admin' } });
     const passwordHash = await argon2.hash('123456');
 
     admin = userRepo.create({
       fullName: 'System Administrator',
       username: adminUsername,
       password: passwordHash,
+      personalEmail: 'huy@gmail.com',
+      currentJob: 'Software Engineer',
+      address: 'District 5',
+      city: 'Cho Lon',
       roles: [adminRole!],
     });
 

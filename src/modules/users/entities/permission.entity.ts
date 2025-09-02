@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { Role } from './role.entity';
 
+@Unique(['resource', 'action'])
 @Entity('permissions')
 export class Permission {
   @PrimaryGeneratedColumn()

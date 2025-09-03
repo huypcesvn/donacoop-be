@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { DeliveryPoint } from '../delivery_points/delivery-points.entity';
 import { User } from '../users/entities/user.entity';
 import { Truck } from '../trucks/truck.entity';

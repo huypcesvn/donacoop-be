@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import * as argon2 from 'argon2';
 import { User } from '../../modules/users/entities/user.entity';
-import { Role } from '../../modules/users/entities/role.entity';
+import { Role } from '../../modules/roles/role.entity';
 import { Permission } from '../../modules/users/entities/permission.entity';
 import { AppDataSource } from '../data-source';
 import { PERMISSIONS } from 'src/common/constants/permissions.constant';

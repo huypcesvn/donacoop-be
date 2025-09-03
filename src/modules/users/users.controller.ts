@@ -20,11 +20,6 @@ export class UsersController {
     return this.usersService.findAll(page, limit, keyword, role);
   }
 
-  @Get('roles')
-  getRoles() {
-    return this.usersService.getRoles();
-  }
-
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.usersService.findOneById(id);

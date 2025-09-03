@@ -6,7 +6,7 @@ import { FindOneOptions, In, Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from './entities/role.entity';
+import { Role } from '../roles/role.entity';
 
 @Injectable()
 export class UsersService {
@@ -57,10 +57,6 @@ export class UsersService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
-  }
-
-  getRoles() {
-    return this.roleRepository.find({ order: { id: 'ASC' } });
   }
 
   findOneById(id: number, options?: FindOneOptions<User>) {

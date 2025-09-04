@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsEmail, MaxLength, MinLength, IsPhoneNumber, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsEmail, MaxLength, MinLength, IsPhoneNumber, IsArray, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -7,7 +8,8 @@ export class UpdateUserDto {
   fullName?: string;
 
   @IsOptional()
-  @IsPhoneNumber('VN')
+  @IsString()
+  @MaxLength(16)
   username?: string;
 
   @IsOptional()
@@ -17,8 +19,7 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(6)
-  @MaxLength(20)
+  @MaxLength(100)
   position?: string;
 
   @IsOptional()
@@ -45,6 +46,12 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(100)
   city?: string;
+
+  // relationship: company
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  companyId?: number | null;
 
   // role ids
   @IsOptional()

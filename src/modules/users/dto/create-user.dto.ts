@@ -1,17 +1,20 @@
-import { IsString, IsOptional, IsEmail, MaxLength, MinLength, IsPhoneNumber, IsArray, ArrayNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsEmail, MaxLength, MinLength, IsPhoneNumber, IsArray, ArrayNotEmpty, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString()
   @MaxLength(100)
   fullName: string;
 
-  @IsPhoneNumber('VN')
-  username: string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  username?: string;
 
   @IsOptional()
   @IsString()
   @MinLength(6)
-  @MaxLength(20)
+  @MaxLength(110)
   password?: string;
 
   @IsOptional()
@@ -43,6 +46,12 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(100)
   city?: string;
+
+  // relationship: company
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  companyId?: number | null;
 
   // role ids
   @IsOptional()

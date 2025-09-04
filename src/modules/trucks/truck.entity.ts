@@ -39,7 +39,7 @@ export class Truck {
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'driver_id' })
-  driver: User;
+  driver: User | null;
 
   @OneToMany(() => Registration, (registration) => registration.truck)
   registrations: Registration[];

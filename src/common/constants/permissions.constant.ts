@@ -31,6 +31,24 @@ export const PERMISSIONS = {
     DELETE: { resource: 'warehouse', action: 'delete' } as Permission,
     VIEW:   { resource: 'warehouse', action: 'view'   } as Permission,
   },
+  STONE_TYPE: {
+    CREATE: { resource: 'stone_type', action: 'create' } as Permission,
+    UPDATE: { resource: 'stone_type', action: 'update' } as Permission,
+    DELETE: { resource: 'stone_type', action: 'delete' } as Permission,
+    VIEW:   { resource: 'stone_type', action: 'view'   } as Permission,
+  },
+  DELIVERY_POINT: {
+    CREATE: { resource: 'delivery_point', action: 'create' } as Permission,
+    UPDATE: { resource: 'delivery_point', action: 'update' } as Permission,
+    DELETE: { resource: 'delivery_point', action: 'delete' } as Permission,
+    VIEW:   { resource: 'delivery_point', action: 'view'   } as Permission,
+  },
+  STOCK: {
+    CREATE: { resource: 'stock', action: 'create' } as Permission,
+    UPDATE: { resource: 'stock', action: 'update' } as Permission,
+    DELETE: { resource: 'stock', action: 'delete' } as Permission,
+    VIEW:   { resource: 'stock', action: 'view'   } as Permission,
+  },
   DISPATCH_MACHINE: {
     CREATE: { resource: 'dispatch_machine', action: 'create' } as Permission,
     UPDATE: { resource: 'dispatch_machine', action: 'update' } as Permission,

@@ -13,7 +13,7 @@ export class Warehouse {
 
   @ManyToOne(() => Company, (company) => company.warehouses, { nullable: true })
   @JoinColumn({ name: 'company_id' })
-  company: Company;
+  company: Company | null;
 
   @OneToMany(() => Stock, (stock) => stock.warehouse)
   stocks: Stock[];

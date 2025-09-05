@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
+import { User } from './user.entity';
 import { FindOneOptions, In, Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';

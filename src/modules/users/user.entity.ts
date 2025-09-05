@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
-import { Role } from '../../roles/role.entity';
-import { Company } from '../../companies/company.entity';
+import { Role } from '../roles/role.entity';
+import { Company } from '../companies/company.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity('users')

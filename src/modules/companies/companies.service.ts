@@ -15,7 +15,7 @@ export class CompaniesService {
 
     const queryBuilder = this.companyRepository
       .createQueryBuilder('company')
-      // .leftJoinAndSelect('company.deliveryPoints', 'deliveryPoint')
+      .leftJoinAndSelect('company.deliveryPoints', 'deliveryPoint')
       .orderBy('company.id', 'ASC')
       .addOrderBy('company.name', 'ASC');
 

@@ -13,7 +13,10 @@ export class DeliveryPoint {
   @Column({ type: 'float', nullable: true })
   distance: number; // km
 
-  @ManyToOne(() => Company, (company) => company.deliveryPoints, { nullable: false })
+  @ManyToOne(() => Company, (company) => company.deliveryPoints, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'company_id' })
   company: Company;
 

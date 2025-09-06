@@ -34,6 +34,7 @@ export class UsersService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('user.company', 'company')
       .orderBy('role.id', 'ASC')
       .addOrderBy('user.fullName', 'ASC');
 

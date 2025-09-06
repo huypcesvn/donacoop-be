@@ -4,6 +4,7 @@ import { Company } from './company.entity';
 import { Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { DeliveryPoint } from '../delivery_points/delivery-points.entity';
 
 @Injectable()
 export class CompaniesService {
@@ -14,6 +15,7 @@ export class CompaniesService {
 
     const queryBuilder = this.companyRepository
       .createQueryBuilder('company')
+      // .leftJoinAndSelect('company.deliveryPoints', 'deliveryPoint')
       .orderBy('company.id', 'ASC')
       .addOrderBy('company.name', 'ASC');
 
@@ -42,15 +44,43 @@ export class CompaniesService {
     const existing = await this.companyRepository.findOne({ where: { name: createCompanyDto.name } });
     if (existing) throw new BadRequestException('Company name already exists.');
 
-    const newCompany = this.companyRepository.create(createCompanyDto);
+    const { deliveryPoints, ...companyData } = createCompanyDto;
+    const newCompany = this.companyRepository.create({
+      ...companyData,
+      deliveryPoints: deliveryPoints?.map((dp) =>
+        this.companyRepository.manager.create(DeliveryPoint, {
+          ...dp,
+        }),
+      ),
+    });
+
     return this.companyRepository.save(newCompany);
   }
 
   async update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    const company = await this.companyRepository.findOne({ where: { id } });
+    const company = await this.companyRepository.findOne({
+      where: { id },
+      relations: ['deliveryPoints'],
+    });
     if (!company) throw new BadRequestException('Company not found.');
 
-    Object.assign(company, updateCompanyDto);
+    const { deliveryPoints, ...companyData } = updateCompanyDto;
+    Object.assign(company, companyData);
+
+    if (deliveryPoints) {
+      const incomingIds = deliveryPoints.map((dp) => dp.id).filter((id) => !!id);
+      const toRemove = company.deliveryPoints.filter((dp) => !incomingIds.includes(dp.id));
+
+      if (toRemove.length > 0) await this.companyRepository.manager.remove(toRemove);
+
+      company.deliveryPoints = deliveryPoints.map((dp) =>
+        this.companyRepository.manager.create(DeliveryPoint, {
+          ...dp,
+          company,
+        }),
+      );
+    }
+
     return this.companyRepository.save(company);
   }
 
@@ -58,7 +88,7 @@ export class CompaniesService {
     const company = await this.companyRepository.findOne({ where: { id } });
     if (!company) throw new BadRequestException('Company not found.');
 
-    await this.companyRepository.remove(company);
+    await this.companyRepository.delete(id);
     return { message: `Company with id ${id} has been deleted.` };
   }
 }

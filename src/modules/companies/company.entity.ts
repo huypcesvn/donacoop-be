@@ -32,7 +32,7 @@ export class Company {
   @Column({ length: 255, nullable: true }) // e.g., 'seller', 'buyer', 'other' based on CTY Dona/Mua/khác
   type: string;
 
-  @OneToMany(() => DeliveryPoint, (deliveryPoint) => deliveryPoint.company)
+  @OneToMany(() => DeliveryPoint, (deliveryPoint) => deliveryPoint.company, { cascade: true })
   deliveryPoints: DeliveryPoint[];
 
   @OneToMany(() => User, (user) => user.company)

@@ -1,5 +1,5 @@
-import { Transform } from 'class-transformer';
-import { IsString, IsOptional, MaxLength, IsEmail } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsString, IsOptional, MaxLength, IsEmail, ValidateNested, IsNumber } from 'class-validator';
 
 export class CreateCompanyDto {
   @IsString()
@@ -42,4 +42,24 @@ export class CreateCompanyDto {
   @MaxLength(255)
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   type?: string; // seller, buyer, other
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateDeliveryPointForCompanyDto)
+  deliveryPoints?: CreateDeliveryPointForCompanyDto[];
+}
+
+export class CreateDeliveryPointForCompanyDto {
+  @IsOptional()
+  @IsNumber()
+  id?: number;
+
+  @IsString()
+  @MaxLength(100)
+  name: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  distance?: number;
 }

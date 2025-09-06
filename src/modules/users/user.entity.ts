@@ -38,6 +38,9 @@ export class User {
   @Column({ length: 100, nullable: true })
   city: string;
 
+  @Column({ name: 'company_id', nullable: true })
+  companyId: number;
+
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',

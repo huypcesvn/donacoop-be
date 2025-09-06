@@ -51,7 +51,7 @@ export class CreateUserDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  companyId?: number | null;
+  companyId?: number;
 
   // role ids
   @IsOptional()

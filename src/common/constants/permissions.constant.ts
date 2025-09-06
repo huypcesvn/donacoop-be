@@ -7,6 +7,18 @@ export const PERMISSIONS = {
     DELETE: { resource: 'user', action: 'delete' } as Permission,
     VIEW:   { resource: 'user', action: 'view'   } as Permission,
   },
+  ROLE: {
+    CREATE: { resource: 'role', action: 'create' } as Permission,
+    UPDATE: { resource: 'role', action: 'update' } as Permission,
+    DELETE: { resource: 'role', action: 'delete' } as Permission,
+    VIEW:   { resource: 'role', action: 'view'   } as Permission,
+  },
+  PERMISSION: {
+    CREATE: { resource: 'permission', action: 'create' } as Permission,
+    UPDATE: { resource: 'permission', action: 'update' } as Permission,
+    DELETE: { resource: 'permission', action: 'delete' } as Permission,
+    VIEW:   { resource: 'permission', action: 'view'   } as Permission,
+  },
   COMPANY: {
     CREATE: { resource: 'company', action: 'create' } as Permission,
     UPDATE: { resource: 'company', action: 'update' } as Permission,

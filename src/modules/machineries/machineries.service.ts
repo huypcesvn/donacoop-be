@@ -5,7 +5,7 @@ import { Machinery } from './machinery.entity';
 import { CreateMachineryDto } from './dto/create-machinery.dto';
 import { UpdateMachineryDto } from './dto/update-machinery.dto';
 import { Company } from '../companies/company.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class MachineriesService {

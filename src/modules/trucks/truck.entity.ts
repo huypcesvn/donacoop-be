@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Company } from '../companies/company.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '../users/user.entity';
 import { Registration } from '../registrations/registration.entity';
 import { Activity } from '../activities/activity.entity';
 

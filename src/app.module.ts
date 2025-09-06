@@ -9,6 +9,7 @@ import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesModule } from './modules/roles/roles.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { StoneTypesModule } from './modules/stone_types/stone-types.module';
 import { TrucksModule } from './modules/trucks/trucks.module';
@@ -26,6 +27,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     AuthModule,
     UsersModule,
     RolesModule,
+    PermissionsModule,
     CompaniesModule,
     StoneTypesModule,
     TrucksModule,

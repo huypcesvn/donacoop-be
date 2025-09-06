@@ -5,7 +5,7 @@ import { Truck } from './truck.entity';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
 import { Company } from '../companies/company.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class TrucksService {

@@ -7,12 +7,14 @@ import * as argon2 from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '../roles/role.entity';
+import { Company } from '../companies/company.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Role) private roleRepository: Repository<Role>,
+    @InjectRepository(Company) private companyRepository: Repository<Company>
   ) {}
 
   async handleRegister(registerDto: RegisterDto) {
@@ -51,13 +53,7 @@ export class UsersService {
       .take(limit)
       .getManyAndCount();
 
-    return {
-      data: users,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return { data: users, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   findOneById(id: number, options?: FindOneOptions<User>) {
@@ -73,9 +69,14 @@ export class UsersService {
 
     createUserDto.password = await argon2.hash(createUserDto.password || User.DEFAULT_PASSWORD);
 
-    const { roles, ...userData } = createUserDto;
+    const { roles, companyId, ...userData } = createUserDto;
     const newUser = this.userRepository.create(userData);
 
+    if (companyId) {
+      const company = await this.companyRepository.findOne({ where: { id: companyId } });
+      if (!company) throw new BadRequestException('Company not found.');
+      newUser.company = company;
+    }
     if (roles?.length) newUser.roles = await this.roleRepository.findBy({ id: In(roles) });
 
     return this.userRepository.save(newUser);
@@ -91,7 +92,7 @@ export class UsersService {
 
     if (updateUserDto.password) updateUserDto.password = await argon2.hash(updateUserDto.password);
 
-    const { roles, ...updateData } = updateUserDto;
+    const { roles, companyId, ...updateData } = updateUserDto;
     Object.assign(user, updateData);
 
     if (roles !== undefined) {
@@ -101,6 +102,11 @@ export class UsersService {
       } else {
         user.roles = [];  // nếu truyền mảng rỗng => xóa hết roles
       }
+    }
+    if (companyId) {
+      const company = await this.companyRepository.findOne({ where: { id: companyId } });
+      if (!company) throw new BadRequestException('Company not found.');
+      user.company = company;
     }
 
     return this.userRepository.save(user);

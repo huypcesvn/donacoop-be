@@ -46,17 +46,18 @@ export class StocksService {
     const entity = await this.stockRepository.findOne({ where: { id }, relations: ['warehouse', 'stoneType'] });
     if (!entity) throw new BadRequestException('Stock not found');
 
-    if (dto.warehouseId) {
+    if (dto.warehouseId !== undefined) {
       const warehouse = await this.warehouseRepository.findOne({ where: { id: dto.warehouseId } });
       if (!warehouse) throw new BadRequestException('Warehouse not found');
       entity.warehouse = warehouse;
     }
-    if (dto.stoneTypeId) {
+    if (dto.stoneTypeId !== undefined) {
       const stoneType = await this.stoneTypeRepository.findOne({ where: { id: dto.stoneTypeId } });
       if (!stoneType) throw new BadRequestException('Stone type not found');
       entity.stoneType = stoneType;
     }
     if (dto.quantity !== undefined) entity.quantity = dto.quantity;
+
     return this.stockRepository.save(entity);
   }
 

@@ -10,7 +10,7 @@ export class Stock {
   @Column({ type: 'float' })
   quantity: number; // Assume in KG or some unit
 
-  @ManyToOne(() => Warehouse, (warehouse) => warehouse.stocks, { nullable: false })
+  @ManyToOne(() => Warehouse, (warehouse) => warehouse.stocks, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'warehouse_id' })
   warehouse: Warehouse;
 

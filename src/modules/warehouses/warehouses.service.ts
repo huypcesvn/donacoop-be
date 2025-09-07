@@ -18,6 +18,8 @@ export class WarehousesService {
     const qb = this.warehouseRepository
       .createQueryBuilder('warehouse')
       .leftJoinAndSelect('warehouse.company', 'company')
+      .leftJoinAndSelect('warehouse.stocks', 'stocks')
+      .leftJoinAndSelect('stocks.stoneType', 'stoneType')
       .orderBy('warehouse.id', 'ASC')
       .addOrderBy('warehouse.name', 'ASC');
 

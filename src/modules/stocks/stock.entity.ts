@@ -3,7 +3,6 @@ import { Warehouse } from '../warehouses/warehouse.entity';
 import { StoneType } from '../stone_types/stone-type.entity';
 
 @Entity('stocks')
-@Index(['warehouse', 'stoneType'], { unique: true })
 export class Stock {
   @PrimaryGeneratedColumn()
   id: number;

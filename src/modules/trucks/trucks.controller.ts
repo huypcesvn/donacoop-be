@@ -17,8 +17,10 @@ export class TrucksController {
     @Query('keyword') keyword?: string,
     @Query('companyId') companyId?: number,
     @Query('driverId') driverId?: number,
+    @Query('isActive') isActive?: string,
   ) {
-    return this.trucksService.findAll(page, limit, keyword, companyId, driverId);
+    const isActiveBool = isActive !== undefined ? isActive === 'true' : undefined;
+    return this.trucksService.findAll(page, limit, keyword, companyId, driverId, isActiveBool);
   }
 
   @Post()

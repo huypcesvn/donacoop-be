@@ -1,4 +1,4 @@
-import { IsString, IsOptional, MaxLength, IsInt, IsNumber } from 'class-validator';
+import { IsString, IsOptional, MaxLength, IsInt, IsNumber, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateTruckDto {
@@ -40,6 +40,10 @@ export class CreateTruckDto {
   @IsString()
   @MaxLength(255)
   description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 
   @Type(() => Number)
   @IsInt()

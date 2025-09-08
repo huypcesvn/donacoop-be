@@ -48,6 +48,10 @@ export class RegistrationsService {
     const truck = await this.truckRepository.findOne({ where: { id: dto.truckId } });
     if (!truck) throw new BadRequestException('Truck not found');
 
+    if (dto.originWarehouseId && dto.destinationWarehouseId && dto.originWarehouseId === dto.destinationWarehouseId) {
+      throw new BadRequestException('Origin warehouse and destination warehouse cannot be the same');
+    }
+
     const stoneType = dto.stoneTypeId ? await this.stoneTypeRepository.findOne({ where: { id: dto.stoneTypeId } }) : undefined;
     const pickupPosition = dto.pickupPositionId ? await this.machineryRepository.findOne({ where: { id: dto.pickupPositionId } }) : undefined;
     const buyerCompany = dto.buyerCompanyId ? await this.companyRepository.findOne({ where: { id: dto.buyerCompanyId } }) : undefined;
@@ -87,6 +91,10 @@ export class RegistrationsService {
       ],
     });
     if (!entity) throw new BadRequestException('Registration not found');
+
+    if (dto.originWarehouseId !== undefined && dto.destinationWarehouseId !== undefined && dto.originWarehouseId === dto.destinationWarehouseId) {
+      throw new BadRequestException('Origin warehouse and destination warehouse cannot be the same');
+    }
 
     if (dto.truckId) {
       const truck = await this.truckRepository.findOne({ where: { id: dto.truckId } });

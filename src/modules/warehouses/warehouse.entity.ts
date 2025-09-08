@@ -18,6 +18,9 @@ export class Warehouse {
   @OneToMany(() => Stock, (stock) => stock.warehouse)
   stocks: Stock[];
 
+  @OneToMany(() => Registration, (registration) => registration.originWarehouse)
+  registrationsAsOrigin: Registration[];
+
   @OneToMany(() => Registration, (registration) => registration.destinationWarehouse)
   registrationsAsDestination: Registration[];
 

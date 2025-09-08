@@ -55,5 +55,10 @@ export class CreateRegistrationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  originWarehouseId?: number | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
   destinationWarehouseId?: number | null;
 }

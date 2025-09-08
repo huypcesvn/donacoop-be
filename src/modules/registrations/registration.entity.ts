@@ -52,6 +52,10 @@ export class Registration {
   @JoinColumn({ name: 'destination_id' })
   destination: DeliveryPoint; // Điểm đến (for buyers)
 
+  @ManyToOne(() => Warehouse, (warehouse) => warehouse.registrationsAsOrigin, { nullable: true })
+  @JoinColumn({ name: 'origin_warehouse_id' })
+  originWarehouse: Warehouse; // Kho xuất phát, e.g., Kho A
+
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.registrationsAsDestination, { nullable: true })
   @JoinColumn({ name: 'destination_warehouse_id' })
   destinationWarehouse: Warehouse; // For Di dời or Hàng tồn, e.g., Kho B, Bãi A (treat Bãi as warehouse)

@@ -32,6 +32,7 @@ export class RegistrationsService {
       .leftJoinAndSelect('registration.pickupPosition', 'pickupPosition')
       .leftJoinAndSelect('registration.buyerCompany', 'buyerCompany')
       .leftJoinAndSelect('registration.destination', 'destination')
+      .leftJoinAndSelect('registration.originWarehouse', 'originWarehouse')
       .leftJoinAndSelect('registration.destinationWarehouse', 'destinationWarehouse')
       .orderBy('registration.id', 'ASC');
 
@@ -51,6 +52,7 @@ export class RegistrationsService {
     const pickupPosition = dto.pickupPositionId ? await this.machineryRepository.findOne({ where: { id: dto.pickupPositionId } }) : undefined;
     const buyerCompany = dto.buyerCompanyId ? await this.companyRepository.findOne({ where: { id: dto.buyerCompanyId } }) : undefined;
     const destination = dto.destinationId ? await this.deliveryPointRepository.findOne({ where: { id: dto.destinationId } }) : undefined;
+    const originWarehouse = dto.originWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.originWarehouseId } }) : undefined;
     const destinationWarehouse = dto.destinationWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.destinationWarehouseId } }) : undefined;
 
     const entity = this.registrationRepository.create({
@@ -65,13 +67,25 @@ export class RegistrationsService {
       ...(pickupPosition !== undefined ? { pickupPosition } : {}),
       ...(buyerCompany !== undefined ? { buyerCompany } : {}),
       ...(destination !== undefined ? { destination } : {}),
+      ...(originWarehouse !== undefined ? { originWarehouse } : {}),
       ...(destinationWarehouse !== undefined ? { destinationWarehouse } : {}),
     } as any);
     return this.registrationRepository.save(entity);
   }
 
   async update(id: number, dto: UpdateRegistrationDto) {
-    const entity = await this.registrationRepository.findOne({ where: { id }, relations: ['truck', 'stoneType', 'pickupPosition', 'buyerCompany', 'destination', 'destinationWarehouse'] });
+    const entity = await this.registrationRepository.findOne({
+      where: { id },
+      relations: [
+        'truck',
+        'stoneType',
+        'pickupPosition',
+        'buyerCompany',
+        'destination',
+        'originWarehouse',
+        'destinationWarehouse',
+      ],
+    });
     if (!entity) throw new BadRequestException('Registration not found');
 
     if (dto.truckId) {
@@ -90,6 +104,9 @@ export class RegistrationsService {
     }
     if (dto.destinationId !== undefined) {
       entity.destination = dto.destinationId ? await this.deliveryPointRepository.findOne({ where: { id: dto.destinationId } }) : null as any;
+    }
+    if (dto.originWarehouseId !== undefined) {
+      entity.originWarehouse = dto.originWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.originWarehouseId } }) : null as any;
     }
     if (dto.destinationWarehouseId !== undefined) {
       entity.destinationWarehouse = dto.destinationWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.destinationWarehouseId } }) : null as any;

@@ -10,6 +10,9 @@ export class DeliveryPoint {
   @Column({ length: 100, nullable: false })
   name: string; // e.g., điểm A, điểm B
 
+  @Column({ type: 'text', nullable: true })
+  description: string; // Thông tin điểm giao hàng
+
   @Column({ type: 'float', nullable: true })
   distance: number; // km
 

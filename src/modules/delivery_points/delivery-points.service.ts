@@ -31,7 +31,7 @@ export class DeliveryPointsService {
   async create(dto: CreateDeliveryPointDto) {
     const company = await this.companyRepository.findOne({ where: { id: dto.companyId } });
     if (!company) throw new BadRequestException('Company not found');
-    const entity = this.deliveryPointRepository.create({ name: dto.name, distance: dto.distance, company });
+    const entity = this.deliveryPointRepository.create({ name: dto.name, distance: dto.distance, description: dto.description, company });
     return this.deliveryPointRepository.save(entity);
   }
 
@@ -45,6 +45,7 @@ export class DeliveryPointsService {
     }
     entity.name = dto.name ?? entity.name;
     entity.distance = dto.distance ?? entity.distance;
+    entity.description = dto.description ?? entity.description;
     return this.deliveryPointRepository.save(entity);
   }
 

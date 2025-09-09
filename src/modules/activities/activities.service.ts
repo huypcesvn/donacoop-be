@@ -187,7 +187,7 @@ export class ActivitiesService {
       },
     });
 
-    if (weighingMethod === 'Cân mỗi chuyến' || (weighingMethod === 'Cân 1 lần' && !hasWeighedToday) || (weighingMethod === 'Cân mỗi đầu ngày' && !hasWeighedToday)) {
+    if (weighingMethod.toLowerCase() === 'cân mỗi chuyến' || (weighingMethod.toLowerCase() === 'cân 1 lần' && !hasWeighedToday) || (weighingMethod.toLowerCase() === 'cân mỗi đầu ngày' && !hasWeighedToday)) {
       command = truck.weighingPosition || 'Weigh station';
       await this.activityRepository.update(activity.id, {
         weighTime1: now,

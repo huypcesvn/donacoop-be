@@ -33,9 +33,6 @@ export class Truck {
   @Column({ length: 255, nullable: true })
   description: string;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true, nullable: false })
-  isActive: boolean;
-
   @ManyToOne(() => Company, (company) => company.trucks, { nullable: false })
   @JoinColumn({ name: 'company_id' })
   company: Company;

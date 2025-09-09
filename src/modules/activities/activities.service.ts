@@ -30,6 +30,9 @@ export class ActivitiesService {
       .leftJoinAndSelect('activity.pickupPosition', 'pickupPosition')
       .leftJoinAndSelect('activity.buyerCompany', 'buyerCompany')
       .leftJoinAndSelect('activity.registration', 'registration')
+      .leftJoinAndSelect('registration.destination', 'destination')
+      .leftJoinAndSelect('registration.originWarehouse', 'originWarehouse')
+      .leftJoinAndSelect('registration.destinationWarehouse', 'destinationWarehouse')
       .orderBy('activity.id', 'ASC');
 
     if (keyword) qb.where('truck.licensePlate ILIKE :keyword OR activity.revenueType ILIKE :keyword', { keyword: `%${keyword}%` });

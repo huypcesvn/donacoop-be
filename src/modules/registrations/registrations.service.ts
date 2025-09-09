@@ -66,6 +66,7 @@ export class RegistrationsService {
       ...(dto.distance !== undefined ? { distance: dto.distance } : {}),
       ...(dto.description !== undefined ? { description: dto.description } : {}),
       ...(dto.revenueType !== undefined ? { revenueType: dto.revenueType } : {}),
+      ...(dto.registrationStatus !== undefined ? { registrationStatus: dto.registrationStatus } : {}),
       truck,
       ...(stoneType !== undefined ? { stoneType } : {}),
       ...(pickupPosition !== undefined ? { pickupPosition } : {}),
@@ -127,6 +128,7 @@ export class RegistrationsService {
       distance: dto.distance ?? entity.distance,
       description: dto.description ?? entity.description,
       revenueType: dto.revenueType ?? entity.revenueType,
+      registrationStatus: dto.registrationStatus ?? entity.registrationStatus,
     });
     return this.registrationRepository.save(entity);
   }

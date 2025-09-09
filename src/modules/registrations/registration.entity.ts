@@ -6,6 +6,13 @@ import { Company } from '../companies/company.entity';
 import { DeliveryPoint } from '../delivery_points/delivery-points.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
 
+export enum RegistrationStatus {
+  PENDING = 'pending',    // chưa vào cổng (vàng)
+  ENTERED = 'entered',    // mới vào cổng (xanh dương)
+  EXITED = 'exited',      // ra khỏi cổng (xanh lá)
+  INACTIVE = 'inactive',  // không hoạt động (đỏ)
+}
+
 @Entity('registrations')
 export class Registration {
   @PrimaryGeneratedColumn()
@@ -28,6 +35,9 @@ export class Registration {
 
   @Column({ name: 'revenue_type', length: 255, nullable: true })
   revenueType: string; // Doanh thu, e.g., Bán hàng, Hàng tồn, Di dời
+
+  @Column({ name: 'registration_status', type: 'enum', enum: RegistrationStatus, default: RegistrationStatus.PENDING })
+  registrationStatus: RegistrationStatus;
 
   // Duplicated from buyer company if needed, but better to reference
   // If denormalization needed, add email, phone, etc., but prefer relations

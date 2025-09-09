@@ -41,10 +41,6 @@ export class CreateTruckDto {
   @MaxLength(255)
   description?: string;
 
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-
   @Type(() => Number)
   @IsInt()
   companyId: number;

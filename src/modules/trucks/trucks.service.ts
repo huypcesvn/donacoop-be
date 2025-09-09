@@ -21,7 +21,6 @@ export class TrucksService {
     keyword?: string,
     companyId?: number,
     driverId?: number,
-    isActive?: boolean,
   ) {
     const skip = (page - 1) * limit;
     const qb = this.truckRepository
@@ -39,7 +38,6 @@ export class TrucksService {
     }
     if (companyId) qb.andWhere('company.id = :companyId', { companyId });
     if (driverId) qb.andWhere('driver.id = :driverId', { driverId });
-    if (isActive !== undefined) qb.andWhere('truck.isActive = :isActive', { isActive });
 
     const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
@@ -60,7 +58,6 @@ export class TrucksService {
       weighingPosition: dto.weighingPosition,
       allowedLoad: dto.allowedLoad,
       description: dto.description,
-      isActive: dto.isActive ?? true,
       company,
       ...(driver !== undefined ? { driver } : {}),
     });
@@ -96,7 +93,6 @@ export class TrucksService {
       weighingPosition: dto.weighingPosition ?? entity.weighingPosition,
       allowedLoad: dto.allowedLoad ?? entity.allowedLoad,
       description: dto.description ?? entity.description,
-      isActive: dto.isActive ?? entity.isActive,
     });
     return this.truckRepository.save(entity);
   }

@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsInt, IsNumber, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsInt, IsNumber, MaxLength, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { RegistrationStatus } from '../registration.entity';
 
 export class CreateRegistrationDto {
   @IsOptional()
@@ -27,6 +28,10 @@ export class CreateRegistrationDto {
   @IsOptional()
   @IsString()
   revenueType?: string;
+
+  @IsOptional()
+  @IsEnum(RegistrationStatus)
+  registrationStatus?: RegistrationStatus;
 
   @Type(() => Number)
   @IsInt()

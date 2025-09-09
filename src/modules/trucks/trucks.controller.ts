@@ -13,7 +13,7 @@ export class TrucksController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
     @Query('companyId') companyId?: number,
     @Query('driverId') driverId?: number,
@@ -22,22 +22,22 @@ export class TrucksController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.TRUCK.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.TRUCK.CREATE)
   create(@Body() dto: CreateTruckDto) {
     return this.trucksService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.TRUCK.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.TRUCK.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateTruckDto) {
     return this.trucksService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.TRUCK.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.TRUCK.DELETE)
   delete(@Param('id') id: number) {
     return this.trucksService.delete(id);
   }

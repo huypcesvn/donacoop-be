@@ -13,29 +13,29 @@ export class StoneTypesController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
   ) {
     return this.stoneTypesService.findAll(page, limit, keyword);
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STONE_TYPE.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STONE_TYPE.CREATE)
   create(@Body() dto: CreateStoneTypeDto) {
     return this.stoneTypesService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STONE_TYPE.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STONE_TYPE.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateStoneTypeDto) {
     return this.stoneTypesService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STONE_TYPE.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STONE_TYPE.DELETE)
   delete(@Param('id') id: number) {
     return this.stoneTypesService.delete(id);
   }

@@ -13,7 +13,7 @@ export class StocksController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
     @Query('warehouseId') warehouseId?: number,
     @Query('stoneTypeId') stoneTypeId?: number,
@@ -22,22 +22,22 @@ export class StocksController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STOCK.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STOCK.CREATE)
   create(@Body() dto: CreateStockDto) {
     return this.stocksService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STOCK.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STOCK.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateStockDto) {
     return this.stocksService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.STOCK.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.STOCK.DELETE)
   delete(@Param('id') id: number) {
     return this.stocksService.delete(id);
   }

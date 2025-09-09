@@ -13,7 +13,7 @@ export class DeliveryPointsController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
     @Query('companyId') companyId?: number,
   ) {
@@ -21,22 +21,22 @@ export class DeliveryPointsController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.DELIVERY_POINT.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.DELIVERY_POINT.CREATE)
   create(@Body() dto: CreateDeliveryPointDto) {
     return this.deliveryPointsService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.DELIVERY_POINT.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.DELIVERY_POINT.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateDeliveryPointDto) {
     return this.deliveryPointsService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.DELIVERY_POINT.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.DELIVERY_POINT.DELETE)
   delete(@Param('id') id: number) {
     return this.deliveryPointsService.delete(id);
   }

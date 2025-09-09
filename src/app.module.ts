@@ -41,10 +41,10 @@ import { ActivitiesModule } from './modules/activities/activities.module';
   controllers: [AppController],
   providers: [
     AppService,
-    { // Enable authentication globally
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // { // Enable authentication globally
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
   ],
 })
 export class AppModule {}

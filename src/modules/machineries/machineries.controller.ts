@@ -13,7 +13,7 @@ export class MachineriesController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
     @Query('companyId') companyId?: number,
     @Query('driverId') driverId?: number,
@@ -22,22 +22,22 @@ export class MachineriesController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.MACHINE.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.MACHINE.CREATE)
   create(@Body() dto: CreateMachineryDto) {
     return this.machineriesService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.MACHINE.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.MACHINE.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateMachineryDto) {
     return this.machineriesService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.MACHINE.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.MACHINE.DELETE)
   delete(@Param('id') id: number) {
     return this.machineriesService.delete(id);
   }

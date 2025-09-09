@@ -31,8 +31,8 @@ export class AuthController {
   }
 
   @Post('register')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.USER.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.USER.CREATE)
   async register(@Body() registerDto: RegisterDto, @Request() req) {
     console.log(`------ user(${req.user.username}, ${req.user.fullName}) permissions:`, req.user.roles[0]?.permissions.map(perm => `${perm.resource}.${perm.action}`))
     return this.authService.register(registerDto);

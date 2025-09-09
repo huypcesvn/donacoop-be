@@ -34,7 +34,7 @@ export class ActivitiesService {
       .leftJoinAndSelect('activity.registration', 'registration')
       .leftJoinAndSelect('registration.destination', 'destination')
       .leftJoinAndSelect('registration.originWarehouse', 'originWarehouse')
-      .leftJoinAndSelect( 'registration.destinationWarehouse', 'destinationWarehouse')
+      .leftJoinAndSelect('registration.destinationWarehouse', 'destinationWarehouse')
       .leftJoinAndSelect('registration.buyerCompany', 'buyerCompany')
       .orderBy('activity.id', 'ASC');
 
@@ -144,9 +144,9 @@ export class ActivitiesService {
       order: { tripNumber: 'ASC' },
     });
     if (!registrations.length) return {
-      message: 'No pending registration found for this truck today',
+      message: 'Xe chưa đăng ký',
       licensePlate: dto.licensePlate,
-    }
+    };
 
     const now = new Date();
     const [hours, minutes] = registrations[0].arrivalTime.split('-')[0].split(':').map(Number);
@@ -189,20 +189,48 @@ export class ActivitiesService {
         createdAt: MoreThanOrEqual(today),
       },
     });
+    const lastWeighed = await this.activityRepository.findOne({
+      where: { truck: { id: truck.id }, weighTime1: Not(IsNull()) },
+      order: { weighTime1: 'DESC' },
+    });
 
-    if (weighingMethod.toLowerCase() === 'cân mỗi chuyến' || (weighingMethod.toLowerCase() === 'cân 1 lần' && !hasWeighedToday) || (weighingMethod.toLowerCase() === 'cân mỗi đầu ngày' && !hasWeighedToday)) {
-      command = truck.weighingPosition || 'Weigh station';
-      await this.activityRepository.update(activity.id, {
-        weighTime1: now,
-        weighPosition1: truck.weighingPosition,
-        weight1: 0, // Placeholder, update actual weight later
-      });
-    } else {
-      command = selectedRegistration.pickupPosition?.name || 'Pickup position';
+    if (weighingMethod.toLowerCase() === 'cân mỗi chuyến') {
+      return {
+        message: `Đi tới trạm cân ${truck.weighingPosition}`,
+        licensePlate: dto.licensePlate,
+      };
+      // TODO fix -> kiểm tra xem trong ngày này đã cân chưa. nếu đã cân r thì điều chuyển qua xe xúc, nếu chưa cân thì đi cân 1
+    } else if (weighingMethod.toLowerCase() === 'cân mỗi ngày') {
+      if (!hasWeighedToday) {
+        command = truck.weighingPosition || 'Trạm cân';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: now,
+          weighPosition1: truck.weighingPosition,
+          weight1: 0, // Placeholder, update actual weight later
+        });
+      } else {
+        command = selectedRegistration.pickupPosition?.name || 'Xe xúc';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: hasWeighedToday.weighTime1,
+          weighPosition1: hasWeighedToday.weighPosition1,
+          weight1: hasWeighedToday.weight1,
+        });
+      }
+    } else if (weighingMethod.toLowerCase() === 'cân 1 lần') {
+      if (!lastWeighed) {
+        command = truck.weighingPosition || 'Trạm cân';
+      } else {
+        command = selectedRegistration.pickupPosition?.name || 'Xe xúc';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: lastWeighed.weighTime1,
+          weighPosition1: lastWeighed.weighPosition1,
+          weight1: lastWeighed.weight1,
+        });
+      }
     }
 
     return {
-      message: `Proceed to ${command}`,
+      message: `Di chuyển ${command}`,
       licensePlate: dto.licensePlate,
       gateInTime: now,
     };
@@ -237,13 +265,24 @@ export class ActivitiesService {
     });
     if (!activity) throw new BadRequestException('No activity found for this truck');
 
-    // Check if weigh station steps are completed
+    // Check if Trạm cân steps are completed
     if (!activity.weighTime1) {
-      throw new BadRequestException('Truck has not completed first weighing');
+      return {
+        message: 'Mời quay lại cân xác',
+        licensePlate: dto.licensePlate,
+      };
     }
-    if (activity.pickupPosition && !activity.weighTime2) {
-      throw new BadRequestException('Truck has not completed second weighing after picking up stone');
+    if (!activity.weighTime2) {
+      return {
+        message: 'Mời quay lại cân lần 2',
+        licensePlate: dto.licensePlate,
+      };
     }
+    // if (activity.pickupPosition && !activity.weighTime2) {
+    //   throw new BadRequestException(
+    //     'Truck has not completed second weighing after picking up stone',
+    //   );
+    // }
 
     activity.gateOutTime = new Date();
     await this.activityRepository.save(activity);
@@ -252,7 +291,7 @@ export class ActivitiesService {
     await this.registrationRepository.save(registration);
 
     return {
-      message: 'Proceed to exit gate',
+      message: 'Di chuyển ra khỏi cổng',
       licensePlate: dto.licensePlate,
       gateOutTime: activity.gateOutTime,
     };
@@ -293,65 +332,59 @@ export class ActivitiesService {
     });
     if (!activity) throw new BadRequestException('No activity found for this truck');
 
-    const expectedWeighPosition = truck.weighingPosition || 'Weigh station';
+    const expectedWeighPosition = truck.weighingPosition || 'Trạm cân';
     if (weighStation !== expectedWeighPosition) {
       return {
-        message: `Proceed to ${expectedWeighPosition}`,
+        message: `Di chuyển ${expectedWeighPosition}`,
         licensePlate,
       };
     }
 
     // Step 4: Handle cases based on whether stone has been picked up
+
     const now = new Date();
-    if (!activity.pickupPosition) {
-      // Case 1: Has not picked up stone
-      if (!activity.weighTime1) {
-        // Update weighTime1, weighPosition1, weight1
-        await this.activityRepository.update(activity.id, {
-          weighTime1: now,
-          weighPosition1: weighStation,
-          weight1: weight,
-        });
-        return {
-          message: `Proceed to ${registration.pickupPosition?.name || 'Pickup position'}`,
-          licensePlate,
-          weighTime1: now,
-        };
-      } else {
-        return {
-          message: `Proceed to ${registration.pickupPosition?.name || 'Pickup position'}`,
-          licensePlate,
-        };
-      }
-    } else {
-      // Case 2: Has picked up stone
-      const stoneType = await this.stoneTypeRepository.findOne({ where: { id: stoneTypeId } });
-      if (!stoneType || (registration.stoneType && registration.stoneType.id !== stoneTypeId)) {
-        return {
-          message: 'Incorrect stone type',
-          licensePlate,
-        }
-      }
-
-      // Use existing weight1 if already weighed, calculate cargo weight
-      const cargoWeight = weight - (activity.weight1 || 0);
-      if (cargoWeight > (truck.allowedLoad || Infinity)) {
-        throw new BadRequestException('Overload detected');
-      }
-
-      if (activity.weighTime1) {
-        // Only update weighTime2, weighPosition2, weight2 if first weighing is done
-        await this.activityRepository.update(activity.id, {
-          weighTime2: now,
-          weighPosition2: weighStation,
-          weight2: weight,
-        });
-      } else {
-        throw new BadRequestException('Truck must complete first weighing before second weighing');
-      }
-
+    // Case 2: Has picked up stone
+    const stoneType = await this.stoneTypeRepository.findOne({ where: { id: stoneTypeId } });
+    if ((!stoneType || (registration.stoneType && registration.stoneType.id !== stoneTypeId)) && activity.weight1) {
       return {
-        message: 'Proceed to exit gate',
+        message: 'Sai loại đá',
+        licensePlate,
+      };
+    }
+
+    const cargoWeight = weight - activity.weight1;
+    if (cargoWeight > (truck.allowedLoad || Infinity)) {
+      return {
+        message: `Hàng quá nặng ${cargoWeight}`,
+        licensePlate,
+      };
+    }
+
+    if (activity.weighTime1) {
+      // Only update weighTime2, weighPosition2, weight2 if first weighing is done
+      await this.activityRepository.update(activity.id, {
+        weighTime2: now,
+        weighPosition2: weighStation,
+        weight2: weight,
+      });
+      return {
+        message: 'Mời ra khỏi cổng',
+        licensePlate,
+      };
+    } else {
+      if (stoneTypeId) {
+        return {
+          message: 'Mời bỏ đá ra',
+          licensePlate,
+        };
+      }
+      await this.activityRepository.update(activity.id, {
+        weighTime1: now,
+        weighPosition1: weighStation,
+        weight1: weight,
+      });
+      return {
+        message: `Lấy đá ${registration.pickupPosition.name}`,
         licensePlate,
         weighTime2: now,
         cargoWeight,

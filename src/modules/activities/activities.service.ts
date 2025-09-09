@@ -143,7 +143,10 @@ export class ActivitiesService {
       ],
       order: { tripNumber: 'ASC' },
     });
-    if (!registrations.length) throw new BadRequestException('No pending registration found for this truck today');
+    if (!registrations.length) return {
+      message: 'No pending registration found for this truck today',
+      licensePlate: dto.licensePlate,
+    }
 
     const now = new Date();
     const [hours, minutes] = registrations[0].arrivalTime.split('-')[0].split(':').map(Number);
@@ -324,31 +327,28 @@ export class ActivitiesService {
       // Case 2: Has picked up stone
       const stoneType = await this.stoneTypeRepository.findOne({ where: { id: stoneTypeId } });
       if (!stoneType || (registration.stoneType && registration.stoneType.id !== stoneTypeId)) {
-        throw new BadRequestException('Incorrect stone type');
+        return {
+          message: 'Incorrect stone type',
+          licensePlate,
+        }
       }
 
-      // Check overload
+      // Use existing weight1 if already weighed, calculate cargo weight
       const cargoWeight = weight - (activity.weight1 || 0);
       if (cargoWeight > (truck.allowedLoad || Infinity)) {
         throw new BadRequestException('Overload detected');
       }
 
-      // Update weighTime2, weighPosition2, weight2, and cargo weight
-      let updateData = {};
       if (activity.weighTime1) {
-        updateData = {
+        // Only update weighTime2, weighPosition2, weight2 if first weighing is done
+        await this.activityRepository.update(activity.id, {
           weighTime2: now,
           weighPosition2: weighStation,
           weight2: weight,
-        };
+        });
       } else {
-        updateData = {
-          weighTime1: now,
-          weighPosition1: weighStation,
-          weight1: weight,
-        };
+        throw new BadRequestException('Truck must complete first weighing before second weighing');
       }
-      await this.activityRepository.update(activity.id, updateData);
 
       return {
         message: 'Proceed to exit gate',

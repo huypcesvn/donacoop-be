@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class WeighStationDto {
@@ -11,9 +11,10 @@ export class WeighStationDto {
   @Type(() => Number)
   weight: number;
 
+  @IsOptional()
   @IsInt()
   @Type(() => Number)
-  stoneTypeId: number;
+  stoneTypeId?: number;
 
   @IsString()
   weighStation: string;

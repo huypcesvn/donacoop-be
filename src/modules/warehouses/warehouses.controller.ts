@@ -13,7 +13,7 @@ export class WarehousesController {
   @Get()
   findAll(
     @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+    @Query('limit') limit: number = 1000,
     @Query('keyword') keyword?: string,
     @Query('companyId') companyId?: number,
   ) {
@@ -21,22 +21,22 @@ export class WarehousesController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.WAREHOUSE.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.WAREHOUSE.CREATE)
   create(@Body() dto: CreateWarehouseDto) {
     return this.warehousesService.create(dto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.WAREHOUSE.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.WAREHOUSE.UPDATE)
   update(@Param('id') id: number, @Body() dto: UpdateWarehouseDto) {
     return this.warehousesService.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.WAREHOUSE.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.WAREHOUSE.DELETE)
   delete(@Param('id') id: number) {
     return this.warehousesService.delete(id);
   }

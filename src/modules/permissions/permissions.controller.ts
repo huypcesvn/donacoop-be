@@ -15,15 +15,15 @@ export class PermissionsController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.PERMISSION.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.PERMISSION.CREATE)
   create(@Body() createPermissionDto: CreatePermissionDto) {
     return this.permissionsService.create(createPermissionDto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.PERMISSION.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.PERMISSION.DELETE)
   delete(@Param('id') id: number) {
     return this.permissionsService.delete(id);
   }

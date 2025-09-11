@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -8,7 +8,9 @@ import { Truck } from '../trucks/truck.entity';
 import { StoneType } from '../stone_types/stone-type.entity';
 import { Machinery } from '../machineries/machinery.entity';
 import { Company } from '../companies/company.entity';
-import { Registration } from '../registrations/registration.entity';
+import { Registration, RegistrationStatus } from '../registrations/registration.entity';
+import { EnterGateActivityDto } from './dto/enter-gate-activity.dto';
+import { WeighStationDto } from './dto/weigh-station.dto';
 
 @Injectable()
 export class ActivitiesService {
@@ -28,11 +30,12 @@ export class ActivitiesService {
       .leftJoinAndSelect('activity.truck', 'truck')
       .leftJoinAndSelect('activity.stoneType', 'stoneType')
       .leftJoinAndSelect('activity.pickupPosition', 'pickupPosition')
-      .leftJoinAndSelect('activity.buyerCompany', 'buyerCompany')
+      // .leftJoinAndSelect('activity.buyerCompany', 'buyerCompany')
       .leftJoinAndSelect('activity.registration', 'registration')
       .leftJoinAndSelect('registration.destination', 'destination')
       .leftJoinAndSelect('registration.originWarehouse', 'originWarehouse')
       .leftJoinAndSelect('registration.destinationWarehouse', 'destinationWarehouse')
+      .leftJoinAndSelect('registration.buyerCompany', 'buyerCompany')
       .orderBy('activity.id', 'ASC');
 
     if (keyword) qb.where('truck.licensePlate ILIKE :keyword OR activity.revenueType ILIKE :keyword', { keyword: `%${keyword}%` });
@@ -71,7 +74,16 @@ export class ActivitiesService {
   }
 
   async update(id: number, dto: UpdateActivityDto) {
-    const entity = await this.activityRepository.findOne({ where: { id }, relations: ['truck', 'stoneType', 'pickupPosition', 'buyerCompany', 'registration'] });
+    const entity = await this.activityRepository.findOne({
+      where: { id },
+      relations: [
+        'truck',
+        'stoneType',
+        'pickupPosition',
+        'buyerCompany',
+        'registration',
+      ],
+    });
     if (!entity) throw new BadRequestException('Activity not found');
 
     if (dto.truckId) {
@@ -104,5 +116,279 @@ export class ActivitiesService {
     if (!entity) throw new BadRequestException('Activity not found');
     await this.activityRepository.remove(entity);
     return { message: `Activity ${id} deleted.` };
+  }
+
+  async enterGate(dto: EnterGateActivityDto) {
+    const truck = await this.truckRepository.findOne({
+      where: { licensePlate: dto.licensePlate },
+      relations: ['registrations'],
+    });
+    if (!truck) throw new BadRequestException('Truck not found');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const registrations = await this.registrationRepository.find({
+      where: {
+        truck: { id: truck.id },
+        arrivalDate: today,
+        registrationStatus: RegistrationStatus.PENDING,
+      },
+      relations: [
+        'buyerCompany',
+        'pickupPosition',
+        'destination',
+        'destinationWarehouse',
+        'stoneType',
+      ],
+      order: { tripNumber: 'ASC' },
+    });
+    if (!registrations.length) return {
+      message: 'Xe chưa đăng ký',
+      licensePlate: dto.licensePlate,
+    };
+
+    const now = new Date();
+    const [hours, minutes] = registrations[0].arrivalTime.split('-')[0].split(':').map(Number);
+    const arrivalTime = new Date(today);
+    arrivalTime.setHours(hours, minutes, 0, 0);
+    const arrivalTimeEnd = new Date(arrivalTime);
+    arrivalTimeEnd.setHours(arrivalTimeEnd.getHours() + 1);
+
+    let selectedRegistration = registrations[0];
+    if (now < arrivalTime || now > arrivalTimeEnd) {
+      selectedRegistration = registrations.find(reg => {
+        const [startHours, startMinutes] = reg.arrivalTime.split('-')[0].split(':').map(Number);
+        const regArrivalTime = new Date(today);
+        regArrivalTime.setHours(startHours, startMinutes, 0, 0);
+        const regArrivalTimeEnd = new Date(regArrivalTime);
+        regArrivalTimeEnd.setHours(regArrivalTimeEnd.getHours() + 1);
+        return now < regArrivalTime || now > regArrivalTimeEnd;
+      }) || registrations[0];
+    }
+
+    const activity = this.activityRepository.create({
+      truck,
+      gateInTime: now,
+      registration: selectedRegistration,
+      stoneType: selectedRegistration.stoneType,
+      buyerCompany: selectedRegistration.buyerCompany,
+      pickupPosition: selectedRegistration.pickupPosition,
+    });
+    await this.activityRepository.save(activity);
+
+    selectedRegistration.registrationStatus = RegistrationStatus.ENTERED;
+    await this.registrationRepository.save(selectedRegistration);
+
+    let command = '';
+    const weighingMethod = truck.weighingMethod;
+    const hasWeighedToday = await this.activityRepository.findOne({
+      where: {
+        truck: { id: truck.id },
+        weighTime1: Not(IsNull()),
+        createdAt: MoreThanOrEqual(today),
+      },
+    });
+    const lastWeighed = await this.activityRepository.findOne({
+      where: { truck: { id: truck.id }, weighTime1: Not(IsNull()) },
+      order: { weighTime1: 'DESC' },
+    });
+
+    if (weighingMethod.toLowerCase() === 'cân mỗi chuyến') {
+      return {
+        message: `Đi tới trạm cân ${truck.weighingPosition}`,
+        licensePlate: dto.licensePlate,
+      };
+      // TODO fix -> kiểm tra xem trong ngày này đã cân chưa. nếu đã cân r thì điều chuyển qua xe xúc, nếu chưa cân thì đi cân 1
+    } else if (weighingMethod.toLowerCase() === 'cân mỗi ngày') {
+      if (!hasWeighedToday) {
+        command = truck.weighingPosition || 'Trạm cân';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: now,
+          weighPosition1: truck.weighingPosition,
+          weight1: 0, // Placeholder, update actual weight later
+        });
+      } else {
+        command = selectedRegistration.pickupPosition?.name || 'Xe xúc';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: hasWeighedToday.weighTime1,
+          weighPosition1: hasWeighedToday.weighPosition1,
+          weight1: hasWeighedToday.weight1,
+        });
+      }
+    } else if (weighingMethod.toLowerCase() === 'cân 1 lần') {
+      if (!lastWeighed) {
+        command = truck.weighingPosition || 'Trạm cân';
+      } else {
+        command = selectedRegistration.pickupPosition?.name || 'Xe xúc';
+        await this.activityRepository.update(activity.id, {
+          weighTime1: lastWeighed.weighTime1,
+          weighPosition1: lastWeighed.weighPosition1,
+          weight1: lastWeighed.weight1,
+        });
+      }
+    }
+
+    return {
+      message: `Di chuyển ${command}`,
+      licensePlate: dto.licensePlate,
+      gateInTime: now,
+    };
+  }
+
+  async exitGate(dto: EnterGateActivityDto) {
+    const truck = await this.truckRepository.findOne({
+      where: { licensePlate: dto.licensePlate },
+      relations: ['registrations'],
+    });
+    if (!truck) throw new BadRequestException('Truck not found');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const registration = await this.registrationRepository.findOne({
+      where: {
+        truck: { id: truck.id },
+        arrivalDate: today,
+        registrationStatus: RegistrationStatus.ENTERED,
+      },
+      order: { tripNumber: 'ASC' },
+    });
+    if (!registration) throw new BadRequestException('Truck has not entered gate');
+
+    const activity = await this.activityRepository.findOne({
+      where: {
+        truck: { id: truck.id },
+        registration: { id: registration.id },
+        gateInTime: Not(IsNull()),
+      },
+    });
+    if (!activity) throw new BadRequestException('No activity found for this truck');
+
+    // Check if Trạm cân steps are completed
+    if (!activity.weighTime1) {
+      return {
+        message: 'Mời quay lại cân xác',
+        licensePlate: dto.licensePlate,
+      };
+    }
+    if (!activity.weighTime2) {
+      return {
+        message: 'Mời quay lại cân lần 2',
+        licensePlate: dto.licensePlate,
+      };
+    }
+    // if (activity.pickupPosition && !activity.weighTime2) {
+    //   throw new BadRequestException(
+    //     'Truck has not completed second weighing after picking up stone',
+    //   );
+    // }
+
+    activity.gateOutTime = new Date();
+    await this.activityRepository.save(activity);
+
+    registration.registrationStatus = RegistrationStatus.EXITED;
+    await this.registrationRepository.save(registration);
+
+    return {
+      message: 'Di chuyển ra khỏi cổng',
+      licensePlate: dto.licensePlate,
+      gateOutTime: activity.gateOutTime,
+    };
+  }
+
+  async weighStation(dto: WeighStationDto) {
+    const { licensePlate, weight, stoneTypeId, weighStation } = dto;
+
+    // Step 1: Check if truck exists
+    const truck = await this.truckRepository.findOne({
+      where: { licensePlate },
+      relations: ['registrations'],
+    });
+    if (!truck) throw new BadRequestException('Truck not found');
+
+    // Step 2: Check if truck has entered gate
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const registration = await this.registrationRepository.findOne({
+      where: {
+        truck: { id: truck.id },
+        arrivalDate: today,
+        registrationStatus: RegistrationStatus.ENTERED,
+      },
+      order: { tripNumber: 'ASC' },
+      relations: ['stoneType', 'pickupPosition'],
+    });
+    if (!registration) throw new BadRequestException('Truck has not entered gate');
+
+    // Step 3: Check weighing position
+    const activity = await this.activityRepository.findOne({
+      where: {
+        truck: { id: truck.id },
+        registration: { id: registration.id },
+        gateInTime: Not(IsNull()),
+      },
+      relations: ['pickupPosition'],
+    });
+    if (!activity) throw new BadRequestException('No activity found for this truck');
+
+    const expectedWeighPosition = truck.weighingPosition || 'Trạm cân';
+    if (weighStation !== expectedWeighPosition) {
+      return {
+        message: `Di chuyển ${expectedWeighPosition}`,
+        licensePlate,
+      };
+    }
+
+    // Step 4: Handle cases based on whether stone has been picked up
+
+    const now = new Date();
+    // Case 2: Has picked up stone
+    const stoneType = await this.stoneTypeRepository.findOne({ where: { id: stoneTypeId } });
+    if ((!stoneType || (registration.stoneType && registration.stoneType.id !== stoneTypeId)) && activity.weight1) {
+      return {
+        message: 'Sai loại đá',
+        licensePlate,
+      };
+    }
+
+    const cargoWeight = weight - activity.weight1;
+    if (cargoWeight > (truck.allowedLoad || Infinity)) {
+      return {
+        message: `Hàng quá nặng ${cargoWeight}`,
+        licensePlate,
+      };
+    }
+
+    if (activity.weighTime1) {
+      // Only update weighTime2, weighPosition2, weight2 if first weighing is done
+      await this.activityRepository.update(activity.id, {
+        weighTime2: now,
+        weighPosition2: weighStation,
+        weight2: weight,
+      });
+      return {
+        message: 'Mời ra khỏi cổng',
+        licensePlate,
+      };
+    } else {
+      if (stoneTypeId) {
+        return {
+          message: 'Mời bỏ đá ra',
+          licensePlate,
+        };
+      }
+      await this.activityRepository.update(activity.id, {
+        weighTime1: now,
+        weighPosition1: weighStation,
+        weight1: weight,
+      });
+      return {
+        message: `Lấy đá ${registration.pickupPosition.name}`,
+        licensePlate,
+        weighTime2: now,
+        cargoWeight,
+      };
+    }
   }
 }

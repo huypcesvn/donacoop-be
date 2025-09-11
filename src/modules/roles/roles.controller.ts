@@ -22,30 +22,30 @@ export class RolesController {
   }
 
   @Post()
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.ROLE.CREATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.ROLE.CREATE)
   create(@Body() createRoleDto: CreateRoleDto) {
     return this.rolesService.create(createRoleDto);
   }
 
   @Put(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.ROLE.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.ROLE.UPDATE)
   update(@Param('id') id: number, @Body() updateRoleDto: UpdateRoleDto) {
     return this.rolesService.update(id, updateRoleDto);
   }
 
   @Delete(':id')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.ROLE.DELETE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.ROLE.DELETE)
   delete(@Param('id') id: number) {
     return this.rolesService.delete(id);
   }
 
   // update permissions for role
   @Put(':id/permissions')
-  @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.ROLE.UPDATE)
+  // @UseGuards(PermissionsGuard)
+  //@Permissions(PERMISSIONS.ROLE.UPDATE)
   updatePermissions(@Param('id') id: number, @Body() updateRolePermissionsDto: UpdateRolePermissionsDto) {
     return this.rolesService.updatePermissions(id, updateRolePermissionsDto.permissionIds);
   }

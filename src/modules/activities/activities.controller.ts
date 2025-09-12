@@ -5,6 +5,8 @@ import { UpdateActivityDto } from './dto/update-activity.dto';
 import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { Permissions } from 'src/common/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/common/constants/permissions.constant';
+import { EnterGateActivityDto } from './dto/enter-gate-activity.dto';
+import { WeighStationDto } from './dto/weigh-station.dto';
 
 @Controller({ path: 'activities', version: '1' })
 export class ActivitiesController {
@@ -39,5 +41,26 @@ export class ActivitiesController {
   @Permissions(PERMISSIONS.ACTIVITY_TRACKING.DELETE)
   delete(@Param('id') id: number) {
     return this.activitiesService.delete(id);
+  }
+
+  @Post('enter-gate')
+  @UseGuards(PermissionsGuard)
+  @Permissions(PERMISSIONS.ACTIVITY_TRACKING.CREATE)
+  enterGate(@Body() dto: EnterGateActivityDto) {
+    return this.activitiesService.enterGate(dto);
+  }
+
+  @Post('exit-gate')
+  @UseGuards(PermissionsGuard)
+  @Permissions(PERMISSIONS.ACTIVITY_TRACKING.CREATE)
+  exitGate(@Body() dto: EnterGateActivityDto) {
+    return this.activitiesService.exitGate(dto);
+  }
+
+  @Post('weigh-station')
+  @UseGuards(PermissionsGuard)
+  @Permissions(PERMISSIONS.ACTIVITY_TRACKING.CREATE)
+  weighStation(@Body() dto: WeighStationDto) {
+    return this.activitiesService.weighStation(dto);
   }
 }

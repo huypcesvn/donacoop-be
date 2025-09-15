@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TrucksService } from './trucks.service';
 import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
 import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { Permissions } from 'src/common/decorators/permissions.decorator';
 import { PERMISSIONS } from 'src/common/constants/permissions.constant';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller({ path: 'trucks', version: '1' })
 export class TrucksController {
@@ -26,6 +27,14 @@ export class TrucksController {
   @Permissions(PERMISSIONS.TRUCK.CREATE)
   create(@Body() dto: CreateTruckDto) {
     return this.trucksService.create(dto);
+  }
+
+  @Post('upload')
+  @UseGuards(PermissionsGuard)
+  @Permissions(PERMISSIONS.TRUCK.CREATE)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadTrucksFromExcel(@UploadedFile() file) {
+    return this.trucksService.uploadTrucksFromExcel(file);
   }
 
   @Put(':id')

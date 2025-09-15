@@ -6,6 +6,7 @@ import { CreateTruckDto } from './dto/create-truck.dto';
 import { UpdateTruckDto } from './dto/update-truck.dto';
 import { Company } from '../companies/company.entity';
 import { User } from '../users/user.entity';
+import * as XLSX from 'xlsx';
 
 @Injectable()
 export class TrucksService {
@@ -62,6 +63,66 @@ export class TrucksService {
       ...(driver !== undefined ? { driver } : {}),
     });
     return this.truckRepository.save(entity);
+  }
+
+  async uploadTrucksFromExcel(file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
+
+    try {
+      const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Convert sheet to JSON
+      const rows: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: null });
+      const results: Truck[] = [];
+
+      for (const row of rows) {
+        const dto: CreateTruckDto = {
+          licensePlate: row.licensePlate,
+          code: row.code,
+          type: row.type,
+          group: row.group,
+          weighingMethod: row.weighingMethod,
+          weighingPosition: row.weighingPosition,
+          allowedLoad: row.allowedLoad,
+          description: row.description,
+          companyId: row.companyId,
+          driverId: row.driverId,
+        };
+
+        // Validate company
+        const company = await this.companyRepository.findOne({ where: { id: dto.companyId } });
+        if (!company) throw new BadRequestException(`Company with id ${dto.companyId} not found`);
+
+        // Validate driver
+        let driver: User | null = null;
+        if (dto.driverId) {
+          driver = await this.userRepository.findOne({ where: { id: dto.driverId } });
+          if (!driver) throw new BadRequestException(`Driver with id ${dto.driverId} not found`);
+        }
+
+        const entity = this.truckRepository.create({
+          licensePlate: dto.licensePlate,
+          code: dto.code,
+          type: dto.type,
+          group: dto.group,
+          weighingMethod: dto.weighingMethod,
+          weighingPosition: dto.weighingPosition,
+          allowedLoad: dto.allowedLoad,
+          description: dto.description,
+          company,
+          driver,
+        });
+
+        const saved = await this.truckRepository.save(entity);
+        results.push(saved);
+      }
+
+      return { message: `Imported ${results.length} trucks`, data: results };
+    } catch (error) {
+      throw new BadRequestException('Invalid Excel file format');
+    }
   }
 
   async update(id: number, dto: UpdateTruckDto) {

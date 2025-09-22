@@ -1,4 +1,8 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { config } from 'dotenv';
+
+config();
 
 const ormConfig: DataSourceOptions = {
   type: process.env.DB_TYPE as any || 'postgres',
@@ -9,6 +13,7 @@ const ormConfig: DataSourceOptions = {
   database: process.env.DB_NAME || 'donacoop_development',
   entities: [__dirname + '/../**/*.entity.{ts,js}'],
   migrations: [__dirname + '/migrations/*.{ts,js}'],
+  namingStrategy: new SnakeNamingStrategy(),
   synchronize: false,
   logging: true,
 };

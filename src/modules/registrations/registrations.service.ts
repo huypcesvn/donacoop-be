@@ -10,6 +10,7 @@ import { Machinery } from '../machineries/machinery.entity';
 import { Company } from '../companies/company.entity';
 import { DeliveryPoint } from '../delivery_points/delivery-points.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
+import { vnToUtc } from 'src/common/utils/date-time.util';
 
 @Injectable()
 export class RegistrationsService {
@@ -34,7 +35,7 @@ export class RegistrationsService {
       .leftJoinAndSelect('registration.destination', 'destination')
       .leftJoinAndSelect('registration.originWarehouse', 'originWarehouse')
       .leftJoinAndSelect('registration.destinationWarehouse', 'destinationWarehouse')
-      .orderBy('registration.id', 'ASC');
+      .orderBy('registration.id', 'DESC');
 
     if (keyword) qb.where('CAST(registration.tripNumber AS TEXT) ILIKE :keyword OR truck.licensePlate ILIKE :keyword', { keyword: `%${keyword}%` });
     if (truckId) qb.andWhere('truck.id = :truckId', { truckId });
@@ -45,92 +46,16 @@ export class RegistrationsService {
   }
 
   async create(dto: CreateRegistrationDto) {
-    const truck = await this.truckRepository.findOne({ where: { id: dto.truckId } });
-    if (!truck) throw new BadRequestException('Truck not found');
-
-    if (dto.originWarehouseId && dto.destinationWarehouseId && dto.originWarehouseId === dto.destinationWarehouseId) {
-      throw new BadRequestException('Origin warehouse and destination warehouse cannot be the same');
-    }
-
-    const stoneType = dto.stoneTypeId ? await this.stoneTypeRepository.findOne({ where: { id: dto.stoneTypeId } }) : undefined;
-    const pickupPosition = dto.pickupPositionId ? await this.machineryRepository.findOne({ where: { id: dto.pickupPositionId } }) : undefined;
-    const buyerCompany = dto.buyerCompanyId ? await this.companyRepository.findOne({ where: { id: dto.buyerCompanyId } }) : undefined;
-    const destination = dto.destinationId ? await this.deliveryPointRepository.findOne({ where: { id: dto.destinationId } }) : undefined;
-    const originWarehouse = dto.originWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.originWarehouseId } }) : undefined;
-    const destinationWarehouse = dto.destinationWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.destinationWarehouseId } }) : undefined;
-
-    const entity = this.registrationRepository.create({
-      ...(dto.tripNumber !== undefined ? { tripNumber: dto.tripNumber } : {}),
-      ...(dto.arrivalDate !== undefined ? { arrivalDate: dto.arrivalDate as any } : {}),
-      ...(dto.arrivalTime !== undefined ? { arrivalTime: dto.arrivalTime } : {}),
-      ...(dto.distance !== undefined ? { distance: dto.distance } : {}),
-      ...(dto.description !== undefined ? { description: dto.description } : {}),
-      ...(dto.revenueType !== undefined ? { revenueType: dto.revenueType } : {}),
-      ...(dto.registrationStatus !== undefined ? { registrationStatus: dto.registrationStatus } : {}),
-      truck,
-      ...(stoneType !== undefined ? { stoneType } : {}),
-      ...(pickupPosition !== undefined ? { pickupPosition } : {}),
-      ...(buyerCompany !== undefined ? { buyerCompany } : {}),
-      ...(destination !== undefined ? { destination } : {}),
-      ...(originWarehouse !== undefined ? { originWarehouse } : {}),
-      ...(destinationWarehouse !== undefined ? { destinationWarehouse } : {}),
-    } as any);
+    const entity = await this.applyDtoToEntity(dto);
     return this.registrationRepository.save(entity);
   }
 
   async update(id: number, dto: UpdateRegistrationDto) {
-    const entity = await this.registrationRepository.findOne({
-      where: { id },
-      relations: [
-        'truck',
-        'stoneType',
-        'pickupPosition',
-        'buyerCompany',
-        'destination',
-        'originWarehouse',
-        'destinationWarehouse',
-      ],
-    });
+    const entity = await this.registrationRepository.findOne({ where: { id } });
     if (!entity) throw new BadRequestException('Registration not found');
 
-    if (dto.originWarehouseId !== undefined && dto.destinationWarehouseId !== undefined && dto.originWarehouseId === dto.destinationWarehouseId) {
-      throw new BadRequestException('Origin warehouse and destination warehouse cannot be the same');
-    }
-
-    if (dto.truckId) {
-      const truck = await this.truckRepository.findOne({ where: { id: dto.truckId } });
-      if (!truck) throw new BadRequestException('Truck not found');
-      entity.truck = truck;
-    }
-    if (dto.stoneTypeId !== undefined) {
-      entity.stoneType = dto.stoneTypeId ? await this.stoneTypeRepository.findOne({ where: { id: dto.stoneTypeId } }) : null as any;
-    }
-    if (dto.pickupPositionId !== undefined) {
-      entity.pickupPosition = dto.pickupPositionId ? await this.machineryRepository.findOne({ where: { id: dto.pickupPositionId } }) : null as any;
-    }
-    if (dto.buyerCompanyId !== undefined) {
-      entity.buyerCompany = dto.buyerCompanyId ? await this.companyRepository.findOne({ where: { id: dto.buyerCompanyId } }) : null as any;
-    }
-    if (dto.destinationId !== undefined) {
-      entity.destination = dto.destinationId ? await this.deliveryPointRepository.findOne({ where: { id: dto.destinationId } }) : null as any;
-    }
-    if (dto.originWarehouseId !== undefined) {
-      entity.originWarehouse = dto.originWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.originWarehouseId } }) : null as any;
-    }
-    if (dto.destinationWarehouseId !== undefined) {
-      entity.destinationWarehouse = dto.destinationWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.destinationWarehouseId } }) : null as any;
-    }
-
-    Object.assign(entity, {
-      tripNumber: dto.tripNumber ?? entity.tripNumber,
-      arrivalDate: dto.arrivalDate ?? entity.arrivalDate,
-      arrivalTime: dto.arrivalTime ?? entity.arrivalTime,
-      distance: dto.distance ?? entity.distance,
-      description: dto.description ?? entity.description,
-      revenueType: dto.revenueType ?? entity.revenueType,
-      registrationStatus: dto.registrationStatus ?? entity.registrationStatus,
-    });
-    return this.registrationRepository.save(entity);
+    const updated = await this.applyDtoToEntity(dto, entity);
+    return this.registrationRepository.save(updated);
   }
 
   async delete(id: number) {
@@ -138,5 +63,49 @@ export class RegistrationsService {
     if (!entity) throw new BadRequestException('Registration not found');
     await this.registrationRepository.remove(entity);
     return { message: `Registration ${id} deleted.` };
+  }
+
+  private async applyDtoToEntity(dto: CreateRegistrationDto | UpdateRegistrationDto, entity?: Registration): Promise<Registration> {
+    if (dto.originWarehouseId !== undefined && dto.destinationWarehouseId !== undefined && dto.originWarehouseId === dto.destinationWarehouseId) {
+      throw new BadRequestException('Origin warehouse and destination warehouse cannot be the same');
+    }
+
+    const registration = entity ?? new Registration();
+
+    if (dto.truckId) {
+      const truck = await this.truckRepository.findOne({ where: { id: dto.truckId } });
+      if (!truck) throw new BadRequestException('Truck not found');
+      registration.truck = truck;
+    }
+    if (dto.stoneTypeId !== undefined) {
+      registration.stoneType = dto.stoneTypeId ? await this.stoneTypeRepository.findOne({ where: { id: dto.stoneTypeId } }) : null!;
+    }
+    if (dto.pickupPositionId !== undefined) {
+      registration.pickupPosition = dto.pickupPositionId ? await this.machineryRepository.findOne({ where: { id: dto.pickupPositionId } }) : null!;
+    }
+    if (dto.buyerCompanyId !== undefined) {
+      registration.buyerCompany = dto.buyerCompanyId ? await this.companyRepository.findOne({ where: { id: dto.buyerCompanyId } }) : null!;
+    }
+    if (dto.destinationId !== undefined) {
+      registration.destination = dto.destinationId ? await this.deliveryPointRepository.findOne({ where: { id: dto.destinationId } }) : null!;
+    }
+    if (dto.originWarehouseId !== undefined) {
+      registration.originWarehouse = dto.originWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.originWarehouseId } }) : null!;
+    }
+    if (dto.destinationWarehouseId !== undefined) {
+      registration.destinationWarehouse = dto.destinationWarehouseId ? await this.warehouseRepository.findOne({ where: { id: dto.destinationWarehouseId } }) : null!;
+    }
+
+    Object.assign(registration, {
+      tripNumber: dto.tripNumber ?? registration.tripNumber,
+      arrivalDate: dto.arrivalDate !== undefined ? vnToUtc(dto.arrivalDate) : registration.arrivalDate,
+      arrivalTime: dto.arrivalTime ?? registration.arrivalTime,
+      distance: dto.distance ?? registration.distance,
+      description: dto.description ?? registration.description,
+      revenueType: dto.revenueType ?? registration.revenueType,
+      registrationStatus: dto.registrationStatus ?? registration.registrationStatus,
+    });
+
+    return registration;
   }
 }

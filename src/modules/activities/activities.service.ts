@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { DeepPartial, IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { Activity } from './activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -173,7 +173,7 @@ export class ActivitiesService {
       stoneType: selectedRegistration.stoneType,
       buyerCompany: selectedRegistration.buyerCompany,
       pickupPosition: selectedRegistration.pickupPosition,
-    });
+    } as DeepPartial<Activity> );
     await this.activityRepository.save(activity);
 
     selectedRegistration.registrationStatus = RegistrationStatus.ENTERED;
@@ -319,6 +319,7 @@ export class ActivitiesService {
       relations: ['stoneType', 'pickupPosition'],
     });
     if (!registration) throw new BadRequestException('Truck has not entered gate');
+    if (!registration.pickupPosition) throw new BadRequestException('Pickup position not found');
 
     // Step 3: Check weighing position
     const activity = await this.activityRepository.findOne({

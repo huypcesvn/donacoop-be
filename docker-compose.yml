@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "./wait-for-it.sh db npm run typeorm:prod && node dist/main.js"
+    container_name: donacoop-app
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - donacoop-network
+    environment:
+      DB_HOST: db
+      DB_PASSWORD: postgres
+
+  db:
+    image: postgres:17
+    container_name: donacoop-db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - donacoop-network
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: donacoop_development
+
+networks:
+  donacoop-network:
+    driver: bridge
+
+volumes:
+  db-data:

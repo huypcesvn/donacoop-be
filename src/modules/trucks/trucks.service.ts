@@ -49,6 +49,7 @@ export class TrucksService {
     if (!company) throw new BadRequestException('Company not found');
 
     const driver = dto.driverId ? await this.userRepository.findOne({ where: { id: dto.driverId } }) : undefined;
+    if (dto.driverId && !driver) throw new BadRequestException('Driver not found');
 
     const entity = this.truckRepository.create({
       licensePlate: dto.licensePlate,
@@ -60,7 +61,7 @@ export class TrucksService {
       allowedLoad: dto.allowedLoad,
       description: dto.description,
       company,
-      ...(driver !== undefined ? { driver } : {}),
+      ...(driver ? { driver } : {}),
     });
     return this.truckRepository.save(entity);
   }

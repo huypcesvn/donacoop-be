@@ -35,7 +35,12 @@ export class MachineriesService {
   async create(dto: CreateMachineryDto) {
     const company = await this.companyRepository.findOne({ where: { id: dto.companyId } });
     if (!company) throw new BadRequestException('Company not found');
-    const driver = dto.driverId ? await this.userRepository.findOne({ where: { id: dto.driverId } }) : undefined;
+
+    let driver: User | null = null;
+    if (dto.driverId) {
+      driver = await this.userRepository.findOne({ where: { id: dto.driverId } });
+      if (!driver) throw new BadRequestException('Driver not found');
+    }
 
     const entityData: any = {
       name: dto.name,
@@ -44,7 +49,7 @@ export class MachineriesService {
       description: dto.description,
       company,
     };
-    if (driver !== undefined) entityData.driver = driver;
+    if (driver !== null) entityData.driver = driver;
     const entity = this.machineryRepository.create(entityData);
     return this.machineryRepository.save(entity);
   }

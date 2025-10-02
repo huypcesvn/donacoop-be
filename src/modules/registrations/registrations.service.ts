@@ -10,7 +10,7 @@ import { Machinery } from '../machineries/machinery.entity';
 import { Company } from '../companies/company.entity';
 import { DeliveryPoint } from '../delivery_points/delivery-points.entity';
 import { Warehouse } from '../warehouses/warehouse.entity';
-import { vnToUtc } from 'src/common/utils/date-time.util';
+import { vnToUtc } from '../../common/utils/date-time.util';
 
 @Injectable()
 export class RegistrationsService {

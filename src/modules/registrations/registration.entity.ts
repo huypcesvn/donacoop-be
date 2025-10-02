@@ -44,31 +44,31 @@ export class Registration {
 
   @ManyToOne(() => Truck, (truck) => truck.registrations, { nullable: false })
   @JoinColumn({ name: 'truck_id' })
-  truck: Truck;
+  truck: Truck | null;
 
   @ManyToOne(() => StoneType, { nullable: true })
   @JoinColumn({ name: 'stone_type_id' })
-  stoneType: StoneType;
+  stoneType: StoneType | null;
 
   @ManyToOne(() => Machinery, (machinery) => machinery.registrations, { nullable: true })
   @JoinColumn({ name: 'pickup_position_id' })
-  pickupPosition: Machinery; // Vị trí lấy đá, e.g., Xe xúc 1
+  pickupPosition: Machinery | null; // Vị trí lấy đá, e.g., Xe xúc 1
 
   @ManyToOne(() => Company, (company) => company.registrationsAsBuyer, { nullable: true })
   @JoinColumn({ name: 'buyer_company_id' })
-  buyerCompany: Company; // CTY mua
+  buyerCompany: Company | null; // CTY mua
 
   @ManyToOne(() => DeliveryPoint, (deliveryPoint) => deliveryPoint.registrations, { nullable: true })
   @JoinColumn({ name: 'destination_id' })
-  destination: DeliveryPoint; // Điểm đến (for buyers)
+  destination: DeliveryPoint | null; // Điểm đến (for buyers)
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.registrationsAsOrigin, { nullable: true })
   @JoinColumn({ name: 'origin_warehouse_id' })
-  originWarehouse: Warehouse; // Kho xuất phát, e.g., Kho A
+  originWarehouse: Warehouse | null; // Kho xuất phát, e.g., Kho A
 
   @ManyToOne(() => Warehouse, (warehouse) => warehouse.registrationsAsDestination, { nullable: true })
   @JoinColumn({ name: 'destination_warehouse_id' })
-  destinationWarehouse: Warehouse; // For Di dời or Hàng tồn, e.g., Kho B, Bãi A (treat Bãi as warehouse)
+  destinationWarehouse: Warehouse | null; // For Di dời or Hàng tồn, e.g., Kho B, Bãi A (treat Bãi as warehouse)
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

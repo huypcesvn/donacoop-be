@@ -50,5 +50,9 @@ $ npm run migration:show
 ```
 
 ```bash
+# Local environment
 $ npm run seed
+
+# Inside Docker container
+$ node dist/db/scripts/seed.js
 ```

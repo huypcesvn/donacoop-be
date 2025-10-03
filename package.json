@@ -13,6 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "typeorm": "typeorm-ts-node-commonjs -d ./src/db/data-source.ts",
+    "typeorm:prod": "typeorm migration:run -d ./dist/db/data-source.js",
     "migration:generate": "npm run typeorm -- migration:generate src/db/migrations/$npm_config_name",
     "migration:create": "typeorm-ts-node-commonjs migration:create src/db/migrations/$npm_config_name",
     "migration:run": "npm run typeorm -- migration:run",
